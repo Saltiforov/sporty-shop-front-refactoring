@@ -1,0 +1,28 @@
+@font-face {
+    font-family: 'Plus Jakarta Sans';
+    src: url('assets/fonts/PlusJakartaSans/PlusJakartaSans-Regular.woff2') format('woff2');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Murecho';
+    src: url('assets/fonts/Murecho/Murecho-Regular.woff2') format('woff2');
+    font-weight: normal;
+    font-style: normal;
+}
+
+
+@font-face {
+    font-family: 'Plus Jakarta Sans';
+    src: url('assets/fonts/PlusJakartaSans/PlusJakartaSans-Bold.woff2') format('woff2');
+    font-weight: bold;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Plus Jakarta Sans';
+    src: url('assets/fonts/PlusJakartaSans/PlusJakartaSans-SemiBold.woff2') format('woff2');
+    font-weight: 600;
+    font-style: normal;
+}

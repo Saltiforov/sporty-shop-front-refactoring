@@ -1,0 +1,157 @@
+/* HEADER */
+
+
+
+/* HEADER */
+
+
+/*  MAIN BANNER  */
+
+@media (max-width: 1400px) {
+    .main-banner {
+        margin-bottom: 20px;
+    }
+}
+
+/*  MAIN BANNER  */
+
+
+/* MAIN PAGE PRODUCT GRID */
+
+
+
+/* MAIN PAGE PRODUCT GRID */
+
+
+/* PRODUCT CARD */
+
+
+
+/* MAIN PAGE PRODUCT GRID */
+
+
+
+
+/* NO DATA TEXT */
+
+
+@media (min-width: 640px) {
+    .no-data-text {
+        font-size: 1.125rem;
+    }
+}
+
+@media (min-width: 768px) {
+    .no-data-text {
+        font-size: 1.25rem;
+    }
+}
+
+@media (min-width: 1024px) {
+    .no-data-text {
+        font-size: 1.375rem;
+    }
+}
+
+@media (min-width: 1280px) {
+    .no-data-text {
+        font-size: 1.5rem;
+    }
+}
+
+.no-data-reviews {
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    width: 50%;
+    justify-content: center;
+}
+
+@media (max-width: 1250px) {
+    .no-data-reviews {
+        width: auto;
+        margin-right: 20px;
+    }
+}
+@media (max-width: 1030px) {
+    .no-data-reviews {
+        margin-right: 0px;
+        margin-bottom: 0px;
+    }
+}
+
+@media (max-width: 750px) {
+    .no-data-text {
+        font-size: 16px;
+    }
+    .no-data-reviews  {
+        font-size: 16px;
+    }
+
+}
+
+
+/* NO DATA TEXT */
+
+
+/* TOAST COMPONENT */
+@media (max-width: 600px) {
+    .p-toast {
+        width: 70vw !important;
+        max-width: 70vw !important;
+        right: 15vw !important;
+        left: 15vw !important;
+    }
+
+    .p-toast .p-toast-message {
+        font-size: 10px !important;
+        padding: 0.3rem 0.5rem !important;
+    }
+
+    .p-toast .toast-detail {
+        display: none !important;
+    }
+
+    .p-toast .p-toast-message-summary {
+        display: block !important;
+        margin-left: 0 !important;
+    }
+
+    .p-toast .p-toast-icon-close {
+        font-size: 0.7rem !important;
+    }
+}
+/* TOAST COMPONENT */
+
+
+
+/* P DIALOG COMPONENT */
+@media (max-width: 600px) {
+    .p-dialog {
+        max-width: 90vw !important;
+        padding: 1rem !important;
+        font-size: 14px !important;
+    }
+
+    .p-dialog .p-dialog-header,
+    .p-dialog .p-dialog-footer {
+        padding: 0.5rem !important;
+    }
+
+    .p-dialog .p-dialog-header-icon,
+    .p-dialog .p-dialog-close-button {
+        width: 1.5rem !important;
+        height: 1.5rem !important;
+        font-size: 1rem !important;
+    }
+
+    .p-dialog .p-button {
+        font-size: 14px !important;
+        padding: 0.4rem 0.8rem !important;
+    }
+
+    .p-dialog .p-confirm-dialog-message {
+        font-size: 14px !important;
+    }
+}
+/* P DIALOG COMPONENT */
