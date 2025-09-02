@@ -12,7 +12,7 @@
     @click="updateFavoriteStatus"
   >
     <svg
-      :style="{ fill: isFavorite ? '#B3261E' : '' }"
+      :style="{ fill: product.isFavorite ? '#B3261E' : '' }"
       :width="26"
       :height="23"
       viewBox="0 0 26 23"
@@ -45,27 +45,29 @@ import {
   addProductToFavorites,
   deleteProductFromFavorites,
 } from '~/services/api/favorites';
-import type { IProduct } from '#shared/types/product';
+import type { IProduct } from '#shared/types/products';
 
-const { product } = defineProps<{ product: IProduct }>()
-const { $basicApi } = useNuxtApp()
-const emit = defineEmits(['change'])
+const props = defineProps<{ product: IProduct }>();
+const { product } = toRefs(props);
+
+const { $basicApi } = useNuxtApp();
+const emit = defineEmits(['change']);
 
 const updateFavoriteStatus = async () => {
-  const productId = product.value._id
+  const productId = product.value._id;
 
   if (product.value.isFavorite) {
-    await deleteProductFromFavorites($basicApi, productId)
-    emit('change', { productId, isFavorite: false })
+    await deleteProductFromFavorites($basicApi, productId);
+    emit('change', { productId, isFavorite: false });
   } else {
-    await addProductToFavorites($basicApi, productId)
-    emit('change', { productId, isFavorite: true })
+    await addProductToFavorites($basicApi, productId);
+    emit('change', { productId, isFavorite: true });
   }
-}
+};
 
 const strokeColor = computed(() =>
-  product.value.isFavorite ? '#B3261E' : 'gray'
-)
+  product.value.isFavorite ? '#B3261E' : 'gray',
+);
 </script>
 
 <style scoped>

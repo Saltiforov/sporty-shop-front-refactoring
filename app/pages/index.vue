@@ -1,18 +1,116 @@
 <template>
   <div>
+    <LoadingOverlay :visible="isLoading" />
+
     <div class="max-w-[1756px] mx-auto">
       <div class="main-content-container">
+        <div class="select-filters mb-3 flex w-full px-3 justify-end">
+          <div class="responsive-filters" @click="handleMobileFilters">
+            <div class="responsive-filters-icon">
+              <svg
+                :class="isMobileFiltersOpen ? 'rotate-90' : 'rotate-0'"
+                class="transition-transform duration-300"
+                width="6"
+                height="10"
+                viewBox="0 0 6 10"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M1 1L5 5L1 9"
+                  stroke="#212094"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </div>
+            <div class="responsive-filters-title fw-500">
+              <p>Фільтри</p>
+            </div>
+          </div>
+          <div class="sort-select min-w-[320px] p-1 flex">
+            <p class="mr-5 sort-title">{{ t('sort_title') }}</p>
+            <UiSortSelect />
+          </div>
+        </div>
+
         <div
           class="main-content min-h-screen grid-cols-1 grid lg:grid-cols-[354px_1fr] gap-[89px]"
         >
-          <div class="product-grid">
-            <ProductCard
-              v-for="product in products"
-              :key="product.id"
-              :product="product"
-              @add-to-cart="showToast"
-              @click="addProductToViewed(product)"
-            />
+          <aside class="rounded-md">
+            <div
+              class="filters mb-[91px] w-full max-w-[354px] min-h-[575px] border rounded-[var(--default-rounded)]"
+            >
+              <Filters v-if="hydrated" />
+              <SkeletonsFilters v-else />
+            </div>
+
+            <transition name="fade-slide">
+              <div v-show="isMobileFiltersOpen" class="filters--mobile">
+                <Filters />
+              </div>
+            </transition>
+
+            <div class="promotional-products text-center">
+              <p
+                class="text-[var(--color-primary-pink)] mb-[21px] fw-600 text-[20px]"
+              >
+                {{ t('promo_products_title') }}
+              </p>
+              <ClientOnly>
+                <div
+                  v-if="hydrated && promotionalProducts?.length"
+                  class="promo-swiper"
+                  :style="{ '--arrow-color': 'var(--color-muted-light-gray)' }"
+                >
+                  <Swiper
+                    v-bind="promotionalProductsSwiperOptions"
+                    :modules="modules"
+                    :pagination="{ clickable: true }"
+                    class="promo-slider"
+                  >
+                    <SwiperSlide
+                      v-for="item in promotionalProducts"
+                      :key="item.id ?? item._id ?? JSON.stringify(item)"
+                    >
+                      <ProductCard
+                        class="mt-3 mb-3"
+                        :product="item"
+                        @click="addProductToViewed(item)"
+                      />
+                    </SwiperSlide>
+                  </Swiper>
+                </div>
+                <div v-else class="flex gap-4 overflow-x-auto">
+                  <SkeletonsProduct class="min-w-[180px]" />
+                </div>
+              </ClientOnly>
+            </div>
+          </aside>
+
+          <div>
+            <div class="product-grid">
+              <ProductCard
+                v-for="product in productList"
+                :key="product.id"
+                :product="product"
+                @click="addProductToViewed(product)"
+              />
+            </div>
+          </div>
+
+          <div class="empty-block" />
+          <div v-if="false">
+            <div class="products-pagination-actions mb-[72px]">
+              <div class="product-pagination-wrapper flex justify-center">
+                <BasePagination
+                  v-if="!isLoading"
+                  v-model="page"
+                  :total-items="totalItems"
+                />
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -21,18 +119,30 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, computed } from 'vue'
-import { getProducts } from '~/services/api/products'
+import { computed } from 'vue';
+import { getProducts, getProductsOnSale } from '~/services/api/products';
+import { useFetchApi } from '~/composables/useApi';
+import { useAppShellState } from '~~/stores/useAppShellState.client';
+import { ModalNames } from '#shared/types/modals';
+import { Autoplay, Navigation, Pagination } from 'swiper/modules';
+import { Swiper, SwiperSlide } from 'swiper/vue';
 
-const route = useRoute()
-const { t, locale } = useI18n()
+const modules = [Navigation, Pagination, Autoplay];
 
-const page = ref(Number(route.query.page) || 1)
-const limit = ref(Number(route.query.limit) || 10)
-const skip = computed(() => (page.value - 1) * limit.value)
-const q = computed(() => route.query.q ?? '')
-// const { $api } = useNuxtApp()
-// console.log('$api', $api);
+const route = useRoute();
+const { t, locale } = useI18n();
+
+const page = ref(Number(route.query.page) || 1);
+const limit = ref(Number(route.query.limit) || 10);
+const skip = computed(() => (page.value - 1) * limit.value);
+const q = computed(() => route.query.q ?? '');
+
+const { addProductToViewed } = useViewedProducts();
+const { handleModalVisibility } = useAppShellState();
+
+const isMobileFiltersOpen = ref(false);
+const promotionalProducts = ref([]);
+
 const productsQueryParams = computed(() => {
   return {
     page: page.value,
@@ -42,25 +152,45 @@ const productsQueryParams = computed(() => {
     price: route.query.price,
     sort: route.query.sort,
     ...(q.value ? { q: q.value } : {}),
-  }
-})
+  };
+});
 
-const { data: products } = await useAsyncData(
+const params = computed(() => {
+  return {
+    ...productsQueryParams.value,
+    locale: locale.value,
+  };
+});
+
+const handleMobileFilters = () => {
+  handleModalVisibility(ModalNames.AUTH);
+};
+
+const { data: products, pending } = await useFetchApi(
   'GeneralProductsList',
-  () => {
-    const params = {
-      ...productsQueryParams.value,
-      locale: locale.value,
-    }
-    console.log('PARAMS', params)
-    return getProducts($api, params)
-  },
-  {
-    watch: [productsQueryParams],
-  }
-)
+  getProducts,
+  params,
+);
 
-console.log('products', products.value)
+const promotionalProductsSwiperOptions = {
+  slidesPerView: 1,
+  loop: true,
+};
+
+const productList = computed(() => products.value?.list ?? []);
+const isLoading = computed(() => pending.value);
+
+const hydrated = ref(false);
+
+onMounted(async () => {
+  hydrated.value = true;
+
+  const { $basicApi } = useNuxtApp();
+  const res = await getProductsOnSale($basicApi);
+  promotionalProducts.value = res.list;
+});
+
+console.log('products', products.value);
 </script>
 
 <style scoped>

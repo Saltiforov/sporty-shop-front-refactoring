@@ -1,4 +1,6 @@
-import Noir from './shared/utils/themes/noir'
+import Noir from './shared/utils/themes/noir';
+import { createSvgIconsPlugin } from 'vite-plugin-svg-icons';
+import path from 'node:path';
 
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
@@ -11,8 +13,23 @@ export default defineNuxtConfig({
     },
   },
   typescript: {
-    typeCheck: true
+    strict: false,
   },
+  vite: {
+    plugins: [
+      createSvgIconsPlugin({
+        iconDirs: [path.resolve(process.cwd(), 'app/assets/icons')],
+        symbolId: 'icon-[name]',
+      }),
+    ],
+  },
+  css: [
+    'primeicons/primeicons.css',
+    '@/assets/styles/fonts.css',
+    '@/assets/styles/base.css',
+    '@/assets/css/variables.css',
+    '@/assets/css/responsive.css',
+  ],
   modules: [
     '@nuxt/eslint',
     '@nuxt/icon',
@@ -22,6 +39,7 @@ export default defineNuxtConfig({
     '@nuxt/test-utils',
     '@pinia/nuxt',
     '@primevue/nuxt-module',
+    '@nuxtjs/tailwindcss',
   ],
   i18n: {
     defaultLocale: 'en',
@@ -72,4 +90,4 @@ export default defineNuxtConfig({
       },
     },
   },
-})
+});

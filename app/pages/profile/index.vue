@@ -1,11 +1,12 @@
 <template>
-
+  <span>sdklasdlasdkals</span>
 </template>
 
 <script setup lang="ts">
 definePageMeta({
-  middleware: ["auth"]
-})
+  middleware: ['auth'],
+  layout: 'breadcrumb',
+});
 </script>
 
 <style scoped>
