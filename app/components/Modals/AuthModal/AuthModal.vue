@@ -128,7 +128,7 @@
             class: 'close-btn',
           },
         }"
-        @click="handleModalVisibility(ModalNames.AUTH)"
+        @click="closeModal"
       >
         <svg
           width="12"
@@ -169,7 +169,7 @@ const { getFormConfig } = useFields(t);
 
 const { login, signUp } = authStore;
 const { isAuthorized } = storeToRefs(authStore);
-const { handleModalVisibility, isModalOpen } = useAppShellState();
+const { handleModalVisibility, isModalOpen, closeModal } = useAppShellState();
 
 
 const isLoading = ref(false);
@@ -208,7 +208,6 @@ const handleAuth = async (formData) => {
 
     if (isAuthorized.value) {
       handleModalVisibility(ModalNames.AUTH);
-      navigateTo('/profile/personal-information');
     }
   } catch (error) {
     console.error('Ошибка при аутентификации:', error);

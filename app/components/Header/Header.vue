@@ -48,30 +48,27 @@
         </div>
 
         <div class="action-panel max-w-[144px] w-full ml-[10px]">
-          <ClientOnly>
             <ActionPanel
               :items="items"
               :cart-count="cartCount"
-              @show-shopping-cart="handleModalVisibility(ModalNames.AUTH)"
             />
-          </ClientOnly>
         </div>
       </nav>
     </div>
-    <nav class="menu w-full text-[red] flex">
-      <VButton @click="handleMobileMenu">
-        <img
-          v-if="!isOpen"
-          src="~/assets/icons/menu-icon-open.svg"
-          alt="menu-icon-open.svg"
-        >
-        <img
-          v-else
-          src="~/assets/icons/menu-icon-close.svg"
-          alt="menu-icon-close.svg"
-        >
-      </VButton>
-    </nav>
+<!--    <nav class="menu w-full text-[red] flex">-->
+<!--      <VButton @click="handleMobileMenu">-->
+<!--        <img-->
+<!--          v-if="!isOpen"-->
+<!--          src="~/assets/icons/menu-icon-open.svg"-->
+<!--          alt="menu-icon-open.svg"-->
+<!--        >-->
+<!--        <img-->
+<!--          v-else-->
+<!--          src="~/assets/icons/menu-icon-close.svg"-->
+<!--          alt="menu-icon-close.svg"-->
+<!--        >-->
+<!--      </VButton>-->
+<!--    </nav>-->
   </header>
 </template>
 

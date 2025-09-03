@@ -20,58 +20,58 @@ const props = defineProps({
   links: {
     type: Array,
     required: true,
-    default: () => []
+    default: () => [],
   },
   parentClasses: {
     type: [Array, String],
-    required: false
+    required: false,
   },
   linkClass: {
     type: [Array, String],
-    required: false
+    required: false,
   },
   labelClass: {
     type: [Array, String],
-    required: false
+    required: false,
   },
   labelStyle: {
     type: [Array, String],
-    required: false
+    required: false,
   },
-})
+});
 
-const emit = defineEmits(['handle-navigation'])
+const emit = defineEmits(['handle-navigation']);
 
-const { locale } = useI18n()
-const router = useRouter()
-const route = useRoute()
+const { locale } = useI18n();
+const router = useRouter();
+const route = useRoute();
 
 function navigateTo(targetPath) {
-  const pathTo = `/${locale.value}${targetPath}`
-  if (route.path === pathTo) return
-  router.push(targetPath)
+  const pathTo = `/${locale.value}${targetPath}`;
+  if (route.path === pathTo) return;
+  router.push(targetPath);
 }
 
 function isActive(page) {
-  const fullPath = `/${locale.value}${page}`
-  return route.path === fullPath
+  const fullPath = `/${locale.value}${page}`;
+  return route.path === fullPath;
 }
 
 const parentClasses = computed(() => {
-  return Array.isArray(props.parentClasses) ? props.parentClasses.join(' ') : props.parentClasses
-})
+  return Array.isArray(props.parentClasses) ? props.parentClasses.join(' ') : props.parentClasses;
+});
 
 const linkClass = computed(() => {
-  return Array.isArray(props.linkClass) ? props.linkClass.join(' ') : props.linkClass
-})
+  return Array.isArray(props.linkClass) ? props.linkClass.join(' ') : props.linkClass;
+});
 
 const labelClass = computed(() => {
-  return Array.isArray(props.labelClass) ? props.labelClass.join(' ') : props.labelClass
-})
+  return Array.isArray(props.labelClass) ? props.labelClass.join(' ') : props.labelClass;
+});
 
 const labelStyle = computed(() => {
-  return Array.isArray(props.labelStyle) ? props.labelStyle.join(' ') : props.labelStyle
-})
+  return Array.isArray(props.labelStyle) ? props.labelStyle.join(' ') : props.labelStyle;
+});
 </script>
 
 <style scoped>

@@ -15,7 +15,12 @@ export const useAppShellState = defineStore('appShellState', () => {
 
 
   const isModalOpen = (modal: ModalNames) => {
+    console.log('Modal open', activeModal.value);
     return activeModal.value === modal;
+  };
+
+  const closeModal = () => {
+    activeModal.value = null;
   };
 
 
@@ -23,5 +28,6 @@ export const useAppShellState = defineStore('appShellState', () => {
     handleModalVisibility,
     isModalOpen,
     activeModal,
+    closeModal,
   };
 });

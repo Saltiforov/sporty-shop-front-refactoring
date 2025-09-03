@@ -10,9 +10,7 @@
             @close="handleModalVisibility(activeModal)"
           />
           <template #fallback>
-            <div class="absolute inset-0 grid place-items-center">
-              <div class="rounded bg-white/90 p-6 shadow">Loading…</div>
-            </div>
+            <LoadingOverlay :visible="true" />
           </template>
         </Suspense>
       </div>

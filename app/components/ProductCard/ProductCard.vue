@@ -40,16 +40,14 @@
           >
         </NuxtLink>
         <div class="product-name w-full min-h-[52px]">
-          <p
-            class="text-[20px] leading-[22px] fw-500 line-clamp-2"
-          >
+          <p class="text-[20px] leading-[22px] fw-500 line-clamp-2">
             {{ product.name }}
           </p>
         </div>
       </div>
 
       <div class="product-reviews mb-[27px] flex items-center">
-        <UiIcon class="mr-2" name="rating"/>
+        <UiIcon class="mr-2" name="rating" />
         <p class="product-grade text-[16px] text-[#8E8E93] fw-500">
           {{ Number(product.reviews?.averageRating?.toFixed(1)) || '0' }}
           <span>({{ product.reviews?.reviewCount || '0' }})</span>
@@ -105,8 +103,8 @@ import { fullImageUrls } from '#shared/utils/index.js';
 import { useCartStore } from '~~/stores/useCart';
 import type { IProduct } from '#shared/types/products';
 
-const props = defineProps<{ product: IProduct }>();
-const { product } = toRefs(props);
+const props = defineProps<{ product: IProduct; variant: string }>();
+const { product, variant } = toRefs(props);
 
 const { isAuthorized } = storeToRefs(useAuthStore());
 const { currency, currencyLabel } = storeToRefs(useCurrencyStore());
