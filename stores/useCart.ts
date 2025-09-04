@@ -1,27 +1,18 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
-import { useCookie } from '#app';
+import { useToastManager } from '~/composables/toastManager';
+import { getCartProducts } from '~/services/api/cart';
 
 export const useCartStore = defineStore('cart', () => {
-  const cartProducts = useCookie('cartProducts', {
+  const cartEntries = useCookie('cartEntries', {
     default: () => [],
   });
-  const isOpen = ref(false);
+  const cartProducts = ref([]);
+  const initialized = ref(false);
+
   const { showProductAddedToast } = useToastManager();
 
-  const close = () => {
-    isOpen.value = false;
-  };
-
-  const open = () => {
-    isOpen.value = true;
-  };
-
-  const cartCount = computed(() => {
-    return cartProducts.value.reduce((acc, item) => {
-      return acc + item.quantity;
-    }, 0);
-  });
+  const cartCount = computed(() => cartProducts.value.length);
 
   const cartTotalPrice = computed(() =>
     cartProducts.value.reduce(
@@ -30,7 +21,29 @@ export const useCartStore = defineStore('cart', () => {
     ),
   );
 
+  const saveEntriesToCookies = (entry) => {
+    const existingIndex = cartEntries.value.findIndex(e => e._id === entry._id);
+
+    if (existingIndex !== -1) {
+      const updated = [...cartEntries.value];
+      updated[existingIndex] = {
+        ...updated[existingIndex],
+        quantity: updated[existingIndex].quantity + entry.quantity,
+      };
+      cartEntries.value = updated;
+    } else {
+      cartEntries.value = [...cartEntries.value, entry];
+    }
+
+  };
+
   const addToCart = (product) => {
+    const cartEntry = {
+      _id: product._id || product.id,
+      quantity: product.quantity || 1,
+    };
+
+
     const existingProduct = cartProducts.value.find(
       (item) => item._id === product._id,
     );
@@ -44,6 +57,7 @@ export const useCartStore = defineStore('cart', () => {
     }
 
     showProductAddedToast(product);
+    saveEntriesToCookies(cartEntry);
   };
 
   function removeFromCart(productId) {
@@ -54,6 +68,23 @@ export const useCartStore = defineStore('cart', () => {
     cartProducts.value = [];
   };
 
+  const cartEntryIds = computed(() => cartEntries.value.map(e => e._id));
+
+  async function init() {
+    if (initialized.value) return;
+
+
+    if (cartEntries.value.length) {
+      const { $basicApi } = useNuxtApp();
+      const res = await getCartProducts($basicApi, cartEntryIds.value);
+      cartProducts.value = res.list;
+    }
+
+    initialized.value = true;
+  }
+
+  init();
+
   return {
     cartProducts,
     cartCount,
@@ -61,8 +92,5 @@ export const useCartStore = defineStore('cart', () => {
     addToCart,
     removeFromCart,
     clearCart,
-    isOpen,
-    close,
-    open,
   };
 });

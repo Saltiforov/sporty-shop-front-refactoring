@@ -15,7 +15,7 @@
             :cart-count="cartCount || 0"
             :responsive="true"
             :is-open-mobile-menu="isMobileSidebarOpen"
-            @show-shopping-cart="handleModalVisibility(ModalNames.CART)"
+            @show-shopping-cart="openModal(ModalNames.CART)"
             @handle-mobile-sidebar="$emit('handle-mobile-sidebar')"
           />
         </section>
@@ -275,7 +275,7 @@ const props = defineProps({
 });
 
 const footerMarker = ref(null);
-const { handleModalVisibility } = useAppShellState();
+const { openModal } = useAppShellState();
 const { cartCount } = storeToRefs(useCartStore());
 
 const isResponsiveVersion = computed(() => getWidth() <= 670);

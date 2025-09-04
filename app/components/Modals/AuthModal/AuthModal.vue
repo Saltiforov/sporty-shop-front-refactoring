@@ -169,7 +169,7 @@ const { getFormConfig } = useFields(t);
 
 const { login, signUp } = authStore;
 const { isAuthorized } = storeToRefs(authStore);
-const { handleModalVisibility, isModalOpen, closeModal } = useAppShellState();
+const { openModal, isModalOpen, closeModal } = useAppShellState();
 
 
 const isLoading = ref(false);
@@ -194,7 +194,7 @@ const setActiveTab = (activeTab) => {
 
 const handleOverlayClick = (e) => {
   if (!popupRef.value?.contains(e.target)) {
-    handleModalVisibility(ModalNames.AUTH);
+    openModal(ModalNames.AUTH);
   }
 };
 
@@ -207,7 +207,7 @@ const handleAuth = async (formData) => {
     await action(formData);
 
     if (isAuthorized.value) {
-      handleModalVisibility(ModalNames.AUTH);
+      openModal(ModalNames.AUTH);
     }
   } catch (error) {
     console.error('Ошибка при аутентификации:', error);

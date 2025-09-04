@@ -1,33 +1,31 @@
 import { defineStore } from 'pinia';
-import { computed, ref } from 'vue';
+import { ref } from 'vue';
 import type { ModalNames } from '#shared/types/modals';
 
 export const useAppShellState = defineStore('appShellState', () => {
   const activeModal = ref<ModalNames | null>(null);
 
-  const handleModalVisibility = (modal: ModalNames) => {
-    // todo rewrite this methods (bad for reading)
-    if (activeModal.value === modal) {
-      activeModal.value = null;
-    }
-    activeModal.value = modal;
-  };
-
+  const isOpen = computed(() => !!activeModal.value);
 
   const isModalOpen = (modal: ModalNames) => {
-    console.log('Modal open', activeModal.value);
     return activeModal.value === modal;
+  };
+
+  const openModal = (modal: ModalNames) => {
+    activeModal.value = modal;
   };
 
   const closeModal = () => {
     activeModal.value = null;
+    console.log('closeModal');
   };
 
 
   return {
-    handleModalVisibility,
+    openModal,
     isModalOpen,
     activeModal,
     closeModal,
+    isOpen,
   };
 });

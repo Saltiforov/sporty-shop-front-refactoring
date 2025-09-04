@@ -91,7 +91,7 @@ const route = useRoute();
 
 const { t } = useI18n();
 const { logOut } = useAuthStore();
-const { handleModalVisibility } = useAppShellState();
+const { openModal } = useAppShellState();
 const { cartCount } = useCartStore();
 const { isAuthorized } = storeToRefs(useAuthStore());
 
@@ -138,11 +138,11 @@ const items = computed(() => {
         items: [
           {
             label: t('login'),
-            command: () => handleModalVisibility(ModalNames.AUTH),
+            command: () => openModal(ModalNames.AUTH),
           },
           {
             label: t('register'),
-            command: () => handleModalVisibility(ModalNames.AUTH),
+            command: () => openModal(ModalNames.AUTH),
           },
         ],
       },

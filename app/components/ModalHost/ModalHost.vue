@@ -2,12 +2,12 @@
   <Teleport to="body">
     <transition name="fade">
       <div v-if="activeModal" class="fixed inset-0 z-[9999]">
-        <div class="absolute inset-0 bg-black/40" @click="handleModalVisibility(activeModal)" />
+        <div class="absolute inset-0 bg-black/40" @click="openModal(activeModal)" />
         <Suspense>
           <component
             :is="currentModal"
             class="relative z-10"
-            @close="handleModalVisibility(activeModal)"
+            @close="openModal(activeModal)"
           />
           <template #fallback>
             <LoadingOverlay :visible="true" />
@@ -25,7 +25,7 @@ import { useAppShellState } from '~~/stores/useAppShellState.client';
 
 const appShell = useAppShellState();
 const { activeModal } = storeToRefs(appShell);
-const { handleModalVisibility } = appShell;
+const { openModal } = appShell;
 
 const currentModal = computed(() => {
   console.log('activeModal', activeModal.value);

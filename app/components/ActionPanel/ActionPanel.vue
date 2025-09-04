@@ -69,7 +69,7 @@
       :disabled="isShoppingCartOpen"
       :pt="buttonPT"
       class="badge-button"
-      @click="handleModalVisibility(ModalNames.CART)"
+      @click="openModal(ModalNames.CART)"
     >
       <div class="badge-container">
         <svg
@@ -99,10 +99,10 @@ import { storeToRefs } from 'pinia';
 import { useAuthStore } from '~~/stores/useAuth.js';
 import { useAppShellState } from '~~/stores/useAppShellState.client.js';
 import { ModalNames } from '#shared/types/modals';
+import { useCartStore } from '~~/stores/useCart';
 
 const props = defineProps({
   items: Array,
-  cartCount: Number,
   responsive: {
     type: Boolean,
     default: false,
@@ -114,7 +114,8 @@ const props = defineProps({
 });
 
 const { isAuthorized } = storeToRefs(useAuthStore());
-const { isModalOpen, handleModalVisibility } = useAppShellState();
+const { cartCount } = storeToRefs(useCartStore());
+const { isModalOpen, openModal } = useAppShellState();
 const emit = defineEmits([
   'toggle',
   'showShoppingCart',

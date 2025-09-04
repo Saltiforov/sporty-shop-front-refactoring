@@ -138,7 +138,7 @@ const skip = computed(() => (page.value - 1) * limit.value);
 const q = computed(() => route.query.q ?? '');
 
 const { addProductToViewed } = useViewedProducts();
-const { handleModalVisibility } = useAppShellState();
+const { openModal } = useAppShellState();
 
 const isMobileFiltersOpen = ref(false);
 const promotionalProducts = ref([]);
@@ -163,7 +163,7 @@ const params = computed(() => {
 });
 
 const handleMobileFilters = () => {
-  handleModalVisibility(ModalNames.AUTH);
+  openModal(ModalNames.AUTH);
 };
 
 const { data: products, pending } = await useFetchApi(
