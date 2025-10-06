@@ -14,7 +14,6 @@
           <Index
             :cart-count="cartCount || 0"
             :responsive="true"
-            :is-open-mobile-menu="isMobileSidebarOpen"
             @show-shopping-cart="openModal(ModalNames.CART)"
             @handle-mobile-sidebar="$emit('handle-mobile-sidebar')"
           />
@@ -265,14 +264,6 @@ import { storeToRefs } from 'pinia';
 const { t } = useI18n();
 
 const getWidth = useWindowWidthWatcher();
-
-const props = defineProps({
-  isMobileSidebarOpen: {
-    type: Boolean,
-    required: true,
-    default: false,
-  },
-});
 
 const footerMarker = ref(null);
 const { openModal } = useAppShellState();

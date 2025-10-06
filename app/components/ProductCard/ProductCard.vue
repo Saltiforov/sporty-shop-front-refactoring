@@ -38,7 +38,7 @@
           {{ productPrice }} {{ t(currencyLabel) }}
         </p>
         <p :class="priceCur({ variant, discount: hasDiscount })">
-          {{ productDiscount || 0 }} {{ t(currencyLabel) }}
+          {{ productPriceAfterDiscount || 0 }} {{ t(currencyLabel) }}
         </p>
       </div>
     </div>
@@ -77,7 +77,7 @@
           {{ productPrice }} {{ t(currencyLabel) }}
         </p>
         <p :class="priceCur({ variant, discount: hasDiscount })">
-          {{ productDiscount || 0 }} {{ t(currencyLabel) }}
+          {{ productPriceAfterDiscount || 0 }} {{ t(currencyLabel) }}
         </p>
       </div>
 
@@ -115,23 +115,19 @@ const props = defineProps<{ product: IProduct; variant?: any }>();
 const variant = computed<any>(() => props.variant ?? 'default');
 
 const { isAuthorized } = storeToRefs(useAuthStore());
-const { currency, currencyLabel } = storeToRefs(useCurrencyStore());
+const { currencyLabel } = storeToRefs(useCurrencyStore());
+const { productPrice, productPriceAfterDiscount, hasDiscount } = usePricing(props.product);
 const { addToCart } = useCartStore();
 const { t } = useI18n();
 
-const productPrice = computed(() => props.product?.price?.[currency.value]);
-const productDiscount = computed(
-  () => props.product?.priceAfterDiscount?.[currency.value],
-);
-const hasDiscount = computed(
-  () =>
-    productDiscount.value != null && productDiscount.value < productPrice.value,
-);
 const rating = computed(
   () => Number(props.product.reviews?.averageRating?.toFixed(1)) || 0,
 );
+
 const count = computed(() => props.product.reviews?.reviewCount || 0);
+
 const redirectUrlToProduct = computed(() => `/product/${props.product.slug}`);
+
 const productImage = computed(() =>
   props.product?.images?.length
     ? fullImageUrls(props.product.images, 'thumb')[0]

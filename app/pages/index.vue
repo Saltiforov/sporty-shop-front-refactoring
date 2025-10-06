@@ -42,15 +42,8 @@
             <div
               class="filters mb-[91px] w-full max-w-[354px] min-h-[575px] border rounded-[var(--default-rounded)]"
             >
-              <Filters v-if="hydrated" />
-              <SkeletonsFilters v-else />
+              <Filters />
             </div>
-
-            <transition name="fade-slide">
-              <div v-show="isMobileFiltersOpen" class="filters--mobile">
-                <Filters />
-              </div>
-            </transition>
 
             <div class="promotional-products text-center">
               <p

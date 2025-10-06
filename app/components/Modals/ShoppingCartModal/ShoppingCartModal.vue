@@ -182,7 +182,7 @@ const {
   totalPriceBeforeDiscount,
   totalPriceAfterDiscount,
   totalDiscount,
-} = storeToRefs(usePricing(cartProducts));
+} = usePricing(cartProducts);
 
 console.log('cartProducts', cartProducts.value);
 

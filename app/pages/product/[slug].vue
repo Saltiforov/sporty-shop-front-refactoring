@@ -151,7 +151,7 @@
                   v-if="hasDiscount"
                   class="text-[var(--color-primary-pink)] price-with-discount text-[36px] leading-[34px] fw-600"
                 >
-                  {{ productDiscount }} {{ t(currencyLabel) }}
+                  {{ productPriceAfterDiscount }} {{ t(currencyLabel) }}
                 </p>
               </div>
 
@@ -308,27 +308,13 @@ const { showProductAddedToast } = useToastManager();
 
 const { viewed, removeProductFromViewedAndRedirect } = useViewedProducts();
 
-const { currency, currencyLabel } = storeToRefs(useCurrencyStore());
+const { currencyLabel } = storeToRefs(useCurrencyStore());
+
+const { productPrice, productPriceAfterDiscount, hasDiscount } = usePricing(product);
 
 const recommended = ref([]);
 
 const selectedImage = ref(null);
-
-const productDiscount = computed(() => {
-  return product.value?.priceAfterDiscount?.[currency.value];
-});
-
-const productPrice = computed(() => {
-  return product.value?.price?.[currency.value];
-});
-
-const hasDiscount = computed(() => {
-  return (
-    productDiscount.value !== null &&
-    productDiscount.value !== undefined &&
-    productDiscount.value < productPrice.value
-  );
-});
 
 const addToCart = (product) => {
   cartStore.addToCart(product);

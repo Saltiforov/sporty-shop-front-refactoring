@@ -1,50 +1,40 @@
+import type { MaybeRefOrGetter } from 'vue';
 import { computed, toValue } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useCurrencyStore } from '~~/stores/useCurrency';
 
-export function usePricing(input: IProduct | IProduct[]) {
+export function usePricing(input: MaybeRefOrGetter<IProduct | IProduct[]>) {
   const { currency } = storeToRefs(useCurrencyStore());
+  const entity = computed(() => toValue(input));
+  const isSingle = computed(() => !Array.isArray(entity.value));
 
-  const product = computed(() => toValue(input.value));
-  const isSingle = computed(() => !Array.isArray(product.value));
-
-  const productPrice = computed(() => item?.price?.[currency.value] ?? 0);
-
-  const productPriceAfterDiscount = computed(
-    () => item?.priceAfterDiscount?.[currency.value] ?? 0,
+  const productPrice = computed(() =>
+    isSingle.value ? entity.value?.price?.[currency.value] ?? 0 : 0,
   );
 
-  const hasDiscount = computed(() => !!productPriceAfterDiscount.value);
+  const productPriceAfterDiscount = computed(() =>
+    isSingle.value ? entity.value?.priceAfterDiscount?.[currency.value] ?? 0 : 0,
+  );
 
-
-  const unitPrice = (item: any, cur: string, useDiscount: boolean) => {
-    const hasDisc =
-      useDiscount &&
-      item.priceAfterDiscount &&
-      typeof item.priceAfterDiscount[cur] === 'number';
-
-    const discounted = hasDisc ? item.priceAfterDiscount[cur] : null;
-    const regular =
-      item.price && typeof item.price[cur] === 'number' ? item.price[cur] : 0;
-
-    return discounted !== null ? discounted : regular;
-  };
-
-  const sumTotal = (list: any[], cur: string, useDiscount: boolean) => {
-    return list.reduce((total, item) => {
-      const qty = item.quantity || 1;
-      return total + unitPrice(item, cur, useDiscount) * qty;
-    }, 0);
-  };
+  const hasDiscount = computed(() =>
+    isSingle.value ? !!entity.value?.priceAfterDiscount?.[currency.value] : false,
+  );
 
   const totalPriceBeforeDiscount = computed(() => {
     if (isSingle.value) return 0;
-    return sumTotal(product.value, currency.value, /* useDiscount */ false);
+    return (entity.value as IProduct[]).reduce((sum, it) => {
+      const price = it.price?.[currency.value] ?? 0;
+      return sum + price * (it.quantity ?? 1);
+    }, 0);
   });
 
   const totalPriceAfterDiscount = computed(() => {
     if (isSingle.value) return 0;
-    return sumTotal(product.value, currency.value, /* useDiscount */ true);
+    return (entity.value as IProduct[]).reduce((sum, it) => {
+      const discounted = it.priceAfterDiscount?.[currency.value];
+      const price = discounted ?? (it.price?.[currency.value] ?? 0);
+      return sum + price * (it.quantity ?? 1);
+    }, 0);
   });
 
   const totalDiscount = computed(
