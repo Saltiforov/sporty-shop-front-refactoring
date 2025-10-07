@@ -162,6 +162,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { useWindowWidthWatcher } from '~/composables/useWindowWidthWatcher.ts';
 import { getAllFilters } from '~/services/api/filters/index.js';
 import defaultFilterImage from '~/assets/icons/injections-icon.svg';
+import { useFilterQuery } from '~/composables/useFilterQuery.js';
 
 const getWidth = useWindowWidthWatcher();
 
@@ -198,6 +199,8 @@ const mobileSelectAllStyles = computed(() => {
       }
     : {};
 });
+
+const { add, remove, replace, toQuery } = useFilterQuery();
 
 const selectAllLabel = (allSelected) => {
   return mobileVersion.value && allSelected ? 'Deselect all' : 'Select all';
@@ -260,6 +263,10 @@ const getSlugsFromQuery = () => {
 
 const buildNewQuery = (routerQuery, newSlugs) => {
   const nextQuery = { ...routerQuery };
+  console.log('newSlugs', newSlugs);
+
+  add('filters', newSlugs);
+
   if (newSlugs.length) {
     nextQuery.filters = newSlugs.join(',');
   } else {
@@ -346,6 +353,7 @@ const onExpandedKeysChange = (newExpandedKeys) => {
 onMounted(async () => {
   const { $basicApi } = useNuxtApp();
   const response = await getAllFilters($basicApi);
+  console.log('response', response.list);
   nodes.value = mapNodes(response.list);
   syncTreeWithQuery();
 });
