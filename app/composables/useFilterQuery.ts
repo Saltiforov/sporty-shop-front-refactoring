@@ -3,6 +3,7 @@ import { debounce } from '~/utils';
 
 type MultiFilterKey = 'filters' | 'brand'
 type ScalarFilterKey = 'price' | 'sort'
+
 const DEFAULT_PRICE = { min: 0, max: 10000 };
 export function useFilterQuery() {
   const route = useRoute();
