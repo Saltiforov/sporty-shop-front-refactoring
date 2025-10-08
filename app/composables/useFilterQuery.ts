@@ -23,8 +23,6 @@ export function useFilterQuery() {
     state.value.filters = parseFilters(query);
     state.value.price = parsePrice(query);
     state.value.sort = parseSort(query);
-
-    console.log('state', state.value);
   };
 
   const parseFilters = (query: LocationQuery): Set<string> => {
@@ -38,14 +36,14 @@ export function useFilterQuery() {
   };
 
   const parsePrice = (query: LocationQuery): { min: number; max: number } => {
-    if (!query.price) return DEFAULT_PRICE;
+    if (!query.price) return { ...DEFAULT_PRICE };
 
     const payload = Object.fromEntries(
       (query.price as string).split(',').map((pair) => {
         const [key, value] = pair.split('-');
         const num = Number(value);
         const validatedValue = isNaN(num)
-          ? DEFAULT_PRICE[key as 'min' | 'max']
+          ? { ...DEFAULT_PRICE[key] }
           : num;
 
         return [key, validatedValue];
@@ -99,17 +97,18 @@ export function useFilterQuery() {
     }
   };
 
-  const isDefaultPrice = computed(
-    () =>
+  const isDefaultPrice = computed(() =>
       state.value.price.min === DEFAULT_PRICE.min &&
       state.value.price.max === DEFAULT_PRICE.max,
   );
+
+  const isDefaultSort = computed(() => state.value.sort === 'popular');
 
   const toQuery = () => {
     return {
       ...(state.value.filters.size ? { filters: stringifyFilters() } : {}),
       ...(!isDefaultPrice.value ? { price: stringifyPrice() } : {}),
-      ...(state.value.sort ? { sort: state.value.sort } : {}),
+      ...(!isDefaultSort.value ? { sort: state.value.sort } : {}),
     };
   };
 

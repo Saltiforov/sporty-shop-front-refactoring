@@ -70,7 +70,6 @@
             :min="0"
             :max="maxLimit"
             class="w-full"
-            @update:model-value="onPriceRangeInput"
           />
         </div>
       </div>
@@ -79,12 +78,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { computed, watch } from 'vue';
 import { useCurrencyStore } from '~~/stores/useCurrency.js';
 import { storeToRefs } from 'pinia';
 import { useFilterQuery } from '~/composables/useFilterQuery';
-import { debounce } from '~/utils';
 import { useDebounceFn } from '~/composables/useDebounceFn';
 
 const props = defineProps({
@@ -100,7 +97,15 @@ const maxLimit = computed(() => {
   return isUahActiveCurrency.value ? 10000 : 1000;
 });
 
-const priceRange = ref([minPrice.value, maxPrice.value]);
+const priceRange = computed({
+  get: () => {
+    return [minPrice.value, maxPrice.value];
+  },
+  set: (priceRange: any) => {
+    const [min, max] = priceRange;
+    applyPriceDebounced(min, max);
+  },
+});
 
 const sliderRangeStyles = computed(() => {
   return {
@@ -133,17 +138,11 @@ const { debounced: applyPriceDebounced } = useDebounceFn(
   300,
 );
 
-function onPriceRangeInput() {
-  const [min, max] = priceRange.value;
-  if (Number.isFinite(min) && Number.isFinite(max)) {
-    applyPriceDebounced(min, max);
-  }
-}
 
 watch(
   () => currency.value,
   () => {
-      replace('price', null);
+    replace('price', null);
   },
 );
 </script>
