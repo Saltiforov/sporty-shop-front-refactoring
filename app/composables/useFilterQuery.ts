@@ -4,16 +4,25 @@ import { debounce } from '~/utils';
 type MultiFilterKey = 'filters' | 'brand'
 type ScalarFilterKey = 'price' | 'sort'
 
+interface IFilterPayload {
+  facetNode: any
+  value: string
+}
+
 const DEFAULT_PRICE = { min: 0, max: 10000 };
 export function useFilterQuery() {
   const route = useRoute();
   const router = useRouter();
 
   const makeState = () => ({
-    filters: new Set<string>(),
+    filters: {
+      generalValue: new Set<string>(),
+      facetKeys: new Map(), // todo rename
+    },
     price: { ...DEFAULT_PRICE },
     sort: 'popular',
   });
+
 
   const state = ref(makeState());
 
@@ -25,13 +34,52 @@ export function useFilterQuery() {
     state.value.sort = parseSort(query);
   };
 
-  const parseFilters = (query: LocationQuery): Set<string> => {
+
+
+  const filtersUrlDemarcation = () => {
+    const filters = {};
+    console.log('filtersUrlDemarcation', route.query);
+    Object.entries(route.query).forEach(([key, value]) => {
+      if (key.startsWith('f-')) {
+        const facetMap = state.value[key].facetKeys;
+
+        const facet = key.slice(2); // убираем 'f-// '
+
+        console.log('filtersUrlDemarcation', value);
+
+        facetMap.set(key, value);
+
+
+        filters[facet] = new Set(String(value).split(','));
+      }
+    });
+
+    console.log('filtersUrlDemarcation filters', filters);
+
+    return filters;
+  };
+
+
+
+  const parseFilters = (query: LocationQuery): any => {
+    const mappedFilters = filtersUrlDemarcation();
+
+    console.log('mappedFilters', mappedFilters);
     const mapNotArrayFilters = query.filters
-      ? new Set<string>([query.filters as string])
-      : new Set<string>();
+      ? {
+          generalValue: new Set<string>([query.filters as string]),
+          facetKeys: new Map(), // todo rename
+        }
+      : {
+          generalValue: new Set<string>(),
+          facetKeys: new Map(), // todo rename
+        };
 
     return Array.isArray(query.filters)
-      ? new Set(query.filters)
+      ? {
+          generalValue: new Set<any>([query.filters]),
+          facetKeys: new Map(), // todo rename
+        }
       : mapNotArrayFilters;
   };
 
@@ -42,9 +90,7 @@ export function useFilterQuery() {
       (query.price as string).split(',').map((pair) => {
         const [key, value] = pair.split('-');
         const num = Number(value);
-        const validatedValue = isNaN(num)
-          ? { ...DEFAULT_PRICE[key] }
-          : num;
+        const validatedValue = isNaN(num) ? { ...DEFAULT_PRICE[key] } : num;
 
         return [key, validatedValue];
       }),
@@ -61,25 +107,53 @@ export function useFilterQuery() {
     return query.sort ? (query.sort as string) : 'popular';
   };
 
-  const stringifyFilters = (filters = state.value.filters) => {
-    return Array.from(filters);
+  const stringifyFilters = () => {
+    const facetMap = state.value.filters.facetKeys;
+    let facetFilters = {};
+
+    for (const [key, setValue] of facetMap.entries()) {
+      const values = Array.from(setValue.values());
+      const filterPartKey = `f-${key}`;
+      const filterPart = {
+        [filterPartKey]: values.sort().join(','),
+      };
+
+      facetFilters = {
+        ...facetFilters,
+        ...filterPart,
+      };
+    }
+    return facetFilters;
   };
 
   const stringifyPrice = (price = state.value.price) => {
     return `min-${price.min},max-${price.max}`;
   };
 
-  const add = (key: MultiFilterKey, value: string | string[]) => {
-    const list = Array.isArray(value) ? value : [value];
+  parseFromRoute();
+
+  const add = (key: MultiFilterKey, payload: IFilterPayload) => {
+    if (payload.facetNode) {
+
+      const facetMap = state.value[key].facetKeys;
+      if (!facetMap.get(payload.facetNode.slug)) {
+        facetMap.set(payload.facetNode.slug, new Set);
+      }
+
+      facetMap.get(payload.facetNode.slug).add(payload.value);
+    }
+
+    const list = Array.isArray(payload.value) ? payload.value : [payload.value];
+
     list.forEach((item) => {
-      state.value[key].add(item);
+      state.value[key].generalValue.add(item);
     });
   };
 
-  const remove = (key: MultiFilterKey, value: string | string[]) => {
-    const list = Array.isArray(value) ? value : [value];
+  const remove = (key: MultiFilterKey, payload: IFilterPayload) => {
+    const list = Array.isArray(payload.value) ? payload.value : [payload.value];
     list.forEach((item) => {
-      state.value[key].delete(item);
+      state.value[key].generalValue.delete(item);
     });
   };
 
@@ -97,22 +171,15 @@ export function useFilterQuery() {
     }
   };
 
-  const isDefaultPrice = computed(() =>
+  const isDefaultPrice = computed(
+    () =>
       state.value.price.min === DEFAULT_PRICE.min &&
       state.value.price.max === DEFAULT_PRICE.max,
   );
 
   const isDefaultSort = computed(() => state.value.sort === 'popular');
 
-  const toQuery = () => {
-    return {
-      ...(state.value.filters.size ? { filters: stringifyFilters() } : {}),
-      ...(!isDefaultPrice.value ? { price: stringifyPrice() } : {}),
-      ...(!isDefaultSort.value ? { sort: state.value.sort } : {}),
-    };
-  };
-
-  const filtersState = computed(() => state.value.filters);
+  const selectedFilters = computed(() => state.value.filters.generalValue);
 
   const minPrice = computed({
     get: () => state.value.price.min,
@@ -130,16 +197,26 @@ export function useFilterQuery() {
 
   const sortState = computed(() => state.value.sort);
 
-
   const clear = () => {
     state.value = makeState();
   };
 
-  parseFromRoute();
 
   const updateQuery = debounce(() => {
-    const nextQuery = toQuery();
-    router.replace({ query: nextQuery });
+    let q: Record<string, any> = {};
+
+    if (state.value.filters.generalValue.size) {
+      q = { ...q, ...stringifyFilters() };
+    }
+    if (!isDefaultPrice.value) {
+      q.price = stringifyPrice();
+    }
+
+    if (!isDefaultSort.value) {
+      q.sort = state.value.sort;
+    }
+
+    router.replace({ query: q });
   }, 300);
 
   watch(
@@ -155,9 +232,10 @@ export function useFilterQuery() {
     add,
     remove,
     replace,
-    toQuery,
     clear,
     maxPrice,
     minPrice,
+    selectedFilters,
+    filtersUrlDemarcation,
   };
 }

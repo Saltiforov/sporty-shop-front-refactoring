@@ -119,6 +119,7 @@ import { useAppShellState } from '~~/stores/useAppShellState.client';
 import { ModalNames } from '#shared/types/modals';
 import { Autoplay, Navigation, Pagination } from 'swiper/modules';
 import { Swiper, SwiperSlide } from 'swiper/vue';
+import { useFilterQuery } from '~/composables/useFilterQuery.js';
 
 const modules = [Navigation, Pagination, Autoplay];
 
@@ -130,48 +131,53 @@ const limit = ref(Number(route.query.limit) || 10);
 const skip = computed(() => (page.value - 1) * limit.value);
 const q = computed(() => route.query.q ?? '');
 
+const { filtersUrlDemarcation } = useFilterQuery();
+
 const { addProductToViewed } = useViewedProducts();
 const { openModal } = useAppShellState();
 
 const isMobileFiltersOpen = ref(false);
 const promotionalProducts = ref([]);
 
-const productsQueryParams = computed(() => {
-  return {
-    page: page.value,
-    limit: limit.value,
-    skip: skip.value,
-    filters: route.query.filters,
-    price: route.query.price,
-    sort: route.query.sort,
-    ...(q.value ? { q: q.value } : {}),
-  };
-});
+console.log('route.query', route.query);
 
-const params = computed(() => {
-  return {
-    ...productsQueryParams.value,
-    locale: locale.value,
-  };
-});
+// const productsQueryParams = computed(() => {
+//   return {
+//     page: page.value,
+//     limit: limit.value,
+//     skip: skip.value,
+//     filters: filtersUrlDemarcation(),
+//     price: route.query.price,
+//     sort: route.query.sort,
+//     ...(q.value ? { q: q.value } : {}),
+//   };
+// });
+//
+// const params = computed(() => {
+//   return {
+//     ...productsQueryParams.value,
+//     locale: locale.value,
+//   };
+// });
 
 const handleMobileFilters = () => {
   openModal(ModalNames.AUTH);
 };
 
-const { data: products, pending } = await useFetchApi(
-  'GeneralProductsList',
-  getProducts,
-  params,
-);
+// const { data: products, pending } = await useFetchApi(
+//   'GeneralProductsList',
+//   getProducts,
+//   params,
+// );
 
 const promotionalProductsSwiperOptions = {
   slidesPerView: 1,
   loop: true,
 };
 
+const products = ref([]);
 const productList = computed(() => products.value?.list ?? []);
-const isLoading = computed(() => pending.value);
+const isLoading = computed(() => false);
 
 const hydrated = ref(false);
 
@@ -179,11 +185,11 @@ onMounted(async () => {
   hydrated.value = true;
 
   const { $basicApi } = useNuxtApp();
-  const res = await getProductsOnSale($basicApi);
-  promotionalProducts.value = res.list;
+  // const res = await getProductsOnSale($basicApi);
+  // promotionalProducts.value = res.list;
 });
 
-console.log('products', products.value);
+// console.log('products', products.value);
 </script>
 
 <style scoped>

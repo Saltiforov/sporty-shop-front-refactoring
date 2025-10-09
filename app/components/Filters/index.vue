@@ -103,10 +103,10 @@
             }"
           >
             <UiCustomCheckbox
-              :model-value="child.modelValue"
+              :model-value="selectedFilters.has(child.slug)"
               :unchecked-border-color="'var(--small-title-color)'"
               :border-radius="'2px'"
-              @update:model-value="(val) => onNodeCheckboxChange(child, val)"
+              @update:model-value="(val) => updateFilterSelection(child, val)"
               @click.stop
             />
             <span class="filters-block-text-child text-sm">{{
@@ -126,15 +126,13 @@
             <span
               class="text-[12px]"
               :style="{
-                color: areAllChildrenSelected(slotProps.node)
+                color: isAllItemsSelected(slotProps.node)
                   ? 'var(--small-title-color)'
                   : 'var(--color-primary-purple)',
               }"
-              @click.stop="
-                onNodeCheckboxChange(slotProps.node, !slotProps.node.modelValue)
-              "
+              @click.stop="selectAllInCategory(slotProps.node)"
             >
-              {{ selectAllLabel(areAllChildrenSelected(slotProps.node)) }}
+              {{ selectAllLabel(slotProps.node) }}
             </span>
           </div>
 
@@ -167,7 +165,6 @@ import { useFilterQuery } from '~/composables/useFilterQuery.js';
 const getWidth = useWindowWidthWatcher();
 
 const mobileVersion = computed(() => getWidth() <= 1024);
-
 const mobileNodeContentStyles = computed(() => {
   return mobileVersion.value
     ? {
@@ -178,7 +175,6 @@ const mobileNodeContentStyles = computed(() => {
       }
     : {};
 });
-
 const mobileRootStyles = computed(() => {
   return mobileVersion.value
     ? {
@@ -186,7 +182,6 @@ const mobileRootStyles = computed(() => {
       }
     : {};
 });
-
 const mobileSelectAllStyles = computed(() => {
   return mobileVersion.value
     ? {
@@ -199,11 +194,33 @@ const mobileSelectAllStyles = computed(() => {
       }
     : {};
 });
+const beforeEnter = (el) => {
+  el.style.height = '0';
+};
+const enter = (el) => {
+  el.style.height = el.scrollHeight + 'px';
+};
+const afterEnter = (el) => {
+  el.style.height = 'auto';
+};
+const beforeLeave = (el) => {
+  el.style.height = el.scrollHeight + 'px';
+};
+const leave = (el) => {
+  el.style.height = '0';
+};
+const afterLeave = (el) => {
+  el.style.height = 'auto';
+};
 
-const { add, remove, replace, toQuery } = useFilterQuery();
+const { add, remove, replace, selectedFilters } = useFilterQuery();
 
-const selectAllLabel = (allSelected) => {
-  return mobileVersion.value && allSelected ? 'Deselect all' : 'Select all';
+const selectAllLabel = (node) => {
+  return isAllItemsSelected(node) ? 'Deselect all' : 'Select all';
+};
+
+const isAllItemsSelected = (node) => {
+  return node.children?.length ? node.children.every(child => selectedFilters.value.has(child.slug)) : false;
 };
 
 const shouldShowDivider = (node) => {
@@ -214,7 +231,6 @@ const shouldShowDivider = (node) => {
 
 const { t, locale } = useI18n();
 const route = useRoute();
-const router = useRouter();
 
 const nodes = ref([]);
 const expandedKeys = ref({ 0: true });
@@ -235,13 +251,6 @@ const collectAllSlugs = (node) => {
   return slugs;
 };
 
-const updateNodeAndChildren = (node, isChecked) => {
-  node.modelValue = isChecked;
-  if (Array.isArray(node.children) && node.children.length) {
-    node.children.forEach((child) => updateNodeAndChildren(child, isChecked));
-  }
-};
-
 const findNodeBySlug = (nodes, targetSlug) => {
   for (const node of nodes) {
     if (node.slug === targetSlug) return node;
@@ -253,32 +262,22 @@ const findNodeBySlug = (nodes, targetSlug) => {
   return null;
 };
 
-const getSlugsFromQuery = () => {
-  const raw = route.query.filters;
-  if (typeof raw === 'string' && raw.length) {
-    return raw.split(',').filter((s) => s.length);
+function findParentBySlug(nodes, childSlug) {
+  for (const node of nodes) {
+    // Проверяем, есть ли у этого узла дети
+    if (node.children && node.children.length) {
+      // Если среди детей есть нужный slug — возвращаем родителя
+      const hasChild = node.children.some(child => child.slug === childSlug);
+      if (hasChild) return node;
+
+      // Иначе ищем глубже (рекурсивно)
+      const found = findParentBySlug(node.children, childSlug);
+      if (found) return found;
+    }
   }
-  return [];
-};
+  return null;
+}
 
-const buildNewQuery = (routerQuery, newSlugs) => {
-  const nextQuery = { ...routerQuery };
-  console.log('newSlugs', newSlugs);
-
-  add('filters', newSlugs);
-
-  if (newSlugs.length) {
-    nextQuery.filters = newSlugs.join(',');
-  } else {
-    delete nextQuery.filters;
-  }
-  return nextQuery;
-};
-
-const areAllChildrenSelected = (node) => {
-  if (!node.children || node.children.length === 0) return false;
-  return node.children.every((child) => child.modelValue === true);
-};
 
 const expandParentNodes = (nodeKey) => {
   const keys = nodeKey.split('-');
@@ -290,28 +289,32 @@ const expandParentNodes = (nodeKey) => {
   });
 };
 
-const onNodeCheckboxChange = async (node, isChecked) => {
-  updateNodeAndChildren(node, isChecked);
+const nodeFacetKey = (node) => {
+  return node.children.length ? node.slug : null;
+};
 
-  const allSlugs = [];
-  const collectSelectedSlugs = (nodes) => {
-    nodes.forEach((n) => {
-      if (n.modelValue) {
-        allSlugs.push(n.slug);
-        expandParentNodes(n.key);
-      }
-      if (Array.isArray(n.children) && n.children.length) {
-        collectSelectedSlugs(n.children);
-      }
-    });
+const updateFilterSelection = (node, isChecked) => {
+  const facetNode = findParentBySlug(nodes.value, node.slug);
+  const payload = {
+    facetNode: facetNode,
+    value: node.slug,
   };
-  collectSelectedSlugs(nodes.value);
 
-  const nextQuery = buildNewQuery(route.query, allSlugs);
-  await router.replace({
-    path: route.path,
-    query: nextQuery,
-  });
+  if (isChecked) {
+    add('filters', payload);
+  } else {
+    remove('filters', payload);
+  }
+};
+
+const selectAllInCategory = (node) => {
+  if (node.children.length && !isAllItemsSelected(node)) {
+    const childrenSlugs = node.children.map(child => child.slug);
+    add('filters', childrenSlugs);
+  } else {
+    const childrenSlugs = node.children.map(child => child.slug);
+    remove('filters', childrenSlugs);
+  }
 };
 
 const mapNodes = (inputArray) => {
@@ -335,17 +338,6 @@ const mapNodes = (inputArray) => {
   return inputArray.map((item, idx) => mapNode(item, idx));
 };
 
-const syncTreeWithQuery = () => {
-  const querySlugs = getSlugsFromQuery();
-  querySlugs.forEach((slug) => {
-    const node = findNodeBySlug(nodes.value, slug);
-    if (node) {
-      updateNodeAndChildren(node, true);
-      expandParentNodes(node.key);
-    }
-  });
-};
-
 const onExpandedKeysChange = (newExpandedKeys) => {
   expandedKeys.value = newExpandedKeys;
 };
@@ -355,38 +347,21 @@ onMounted(async () => {
   const response = await getAllFilters($basicApi);
   console.log('response', response.list);
   nodes.value = mapNodes(response.list);
-  syncTreeWithQuery();
+  // syncTreeWithQuery();
 });
 
 watch(
   () => route.query.filters,
   (newFilters) => {
     if (newFilters) {
-      syncTreeWithQuery();
+      // syncTreeWithQuery();
     }
   },
 );
 
 const childList = ref(null);
 
-const beforeEnter = (el) => {
-  el.style.height = '0';
-};
-const enter = (el) => {
-  el.style.height = el.scrollHeight + 'px';
-};
-const afterEnter = (el) => {
-  el.style.height = 'auto';
-};
-const beforeLeave = (el) => {
-  el.style.height = el.scrollHeight + 'px';
-};
-const leave = (el) => {
-  el.style.height = '0';
-};
-const afterLeave = (el) => {
-  el.style.height = 'auto';
-};
+
 </script>
 
 <style scoped>

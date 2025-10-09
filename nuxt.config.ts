@@ -4,6 +4,10 @@ import path from 'node:path';
 
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
+  devtools: {
+    enabled: true,
+    debug: true,
+  },
   devServer: {
     port: 3080,
   },

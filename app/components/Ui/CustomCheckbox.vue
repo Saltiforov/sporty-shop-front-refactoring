@@ -1,20 +1,22 @@
 <template>
   <label
-      class="custom-checkbox"
-      :class="{ 'is-checked': isChecked, 'is-disabled': disabled }"
+    class="custom-checkbox"
+    :class="{ 'is-checked': isChecked, 'is-disabled': disabled }"
   >
     <input
-        type="checkbox"
-        class="hidden-input"
-        :checked="isChecked"
-        :disabled="disabled"
-        @change="toggle"
+      v-model="isChecked"
+      type="checkbox"
+      class="hidden-input"
+      :checked="isChecked"
+      :disabled="disabled"
     >
     <div
-        class="checkbox-box"
-        :style="{
-        borderColor: isChecked ? props.checkedBorderColor : props.uncheckedBorderColor,
-        borderRadius: props.borderRadius
+      class="checkbox-box"
+      :style="{
+        borderColor: isChecked
+          ? props.checkedBorderColor
+          : props.uncheckedBorderColor,
+        borderRadius: props.borderRadius,
       }"
     >
       <svg v-if="isChecked" class="check-icon" viewBox="0 0 24 24" fill="none">
@@ -27,19 +29,11 @@
   </label>
 </template>
 
-<script setup>
-import { computed } from 'vue';
+<script setup lang="ts">
+import { computed, ref } from 'vue';
 
 const props = defineProps({
-  modelValue: [Boolean, String, Number],
-  trueValue: {
-    type: [Boolean, String, Number],
-    default: true,
-  },
-  falseValue: {
-    type: [Boolean, String, Number],
-    default: false,
-  },
+  modelValue: { type: Boolean, default: false },
   disabled: Boolean,
   borderColor: {
     type: String,
@@ -65,12 +59,14 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue']);
 
-const isChecked = computed(() => props.modelValue === props.trueValue);
 
-const toggle = () => {
-  if (props.disabled) return;
-  emit('update:modelValue', isChecked.value ? props.falseValue : props.trueValue);
-};
+const isChecked = computed({
+  get: () => props.modelValue,
+  set: (value: boolean) => {
+    emit('update:modelValue', value);
+  },
+});
+
 </script>
 
 <style scoped>
