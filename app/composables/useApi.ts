@@ -16,7 +16,6 @@ export function useFetchApi<T>(
   const read = () => toValue(params) ?? {};
   const key = () => `${keyBase}:${stable(read())}`;
   const watchDeps = opts.watch ?? ((isRef(params) || isReactive(params)) ? [params] : undefined);
-  console.log('watchDeps', watchDeps);
   return useAsyncData<T>(
     key,
     () => service($basicApi, read()),

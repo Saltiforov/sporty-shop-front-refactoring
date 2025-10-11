@@ -8,7 +8,6 @@ export function createBasicApi(api: ApiClient) {
 
   return {
     get<T = unknown>(url: string, opts?: any) {
-      console.log('CHECK GETTER opts', opts);
       return req<T>(url, { ...opts, method: 'GET' });
     },
     post<T = unknown>(url: string, data?: any, opts?: any) {

@@ -1,5 +1,6 @@
 import type { LocationQuery } from '#vue-router';
 import { debounce } from '~/utils';
+import { consola } from 'consola';
 
 type MultiFilterKey = 'filters' | 'brand'
 type ScalarFilterKey = 'price' | 'sort'
@@ -23,62 +24,61 @@ export function useFilterQuery() {
     sort: 'popular',
   });
 
-
   const state = ref(makeState());
 
   const parseFromRoute = () => {
     const query = route.query;
 
-    state.value.filters = parseFilters(query);
+    state.value.filters = parseFilters();
     state.value.price = parsePrice(query);
     state.value.sort = parseSort(query);
+
+    console.log('state parseFilters', state.value.filters);
   };
 
-
-
   const filtersUrlDemarcation = () => {
-    const filters = {};
-    console.log('filtersUrlDemarcation', route.query);
+    const filters = new Map();
+
     Object.entries(route.query).forEach(([key, value]) => {
       if (key.startsWith('f-')) {
-        const facetMap = state.value[key].facetKeys;
+        const facet = key.slice(2);
 
-        const facet = key.slice(2); // убираем 'f-// '
-
-        console.log('filtersUrlDemarcation', value);
-
-        facetMap.set(key, value);
-
-
-        filters[facet] = new Set(String(value).split(','));
+        filters.set(facet, new Set(String(value).split(',')));
       }
     });
-
-    console.log('filtersUrlDemarcation filters', filters);
 
     return filters;
   };
 
+  const parseFilters = (): any => {
+    const mappedFilters = filtersUrlDemarcation() as any;
 
+    const newMap = new Map(
+      Array.from(mappedFilters.entries()).map(([key, set]) => [key, new Set(set)]),
+    );
 
-  const parseFilters = (query: LocationQuery): any => {
-    const mappedFilters = filtersUrlDemarcation();
-
-    console.log('mappedFilters', mappedFilters);
-    const mapNotArrayFilters = query.filters
+    const mapNotArrayFilters = mappedFilters.size
       ? {
-          generalValue: new Set<string>([query.filters as string]),
-          facetKeys: new Map(), // todo rename
+        generalValue: new Set(
+          Array.from(mappedFilters.keys()).flatMap(
+            key => Array.from(mappedFilters.get(key).values()),
+          ),
+        ),
+          facetKeys: newMap, // todo rename
         }
       : {
           generalValue: new Set<string>(),
           facetKeys: new Map(), // todo rename
         };
 
-    return Array.isArray(query.filters)
+    return mappedFilters.size
       ? {
-          generalValue: new Set<any>([query.filters]),
-          facetKeys: new Map(), // todo rename
+        generalValue: new Set(
+          Array.from(mappedFilters.keys()).flatMap(
+            key => Array.from(mappedFilters.get(key).values()),
+          ),
+        ),
+          facetKeys: newMap, // todo rename
         }
       : mapNotArrayFilters;
   };
@@ -109,19 +109,14 @@ export function useFilterQuery() {
 
   const stringifyFilters = () => {
     const facetMap = state.value.filters.facetKeys;
-    let facetFilters = {};
+    const facetFilters = {};
 
     for (const [key, setValue] of facetMap.entries()) {
       const values = Array.from(setValue.values());
-      const filterPartKey = `f-${key}`;
-      const filterPart = {
-        [filterPartKey]: values.sort().join(','),
-      };
 
-      facetFilters = {
-        ...facetFilters,
-        ...filterPart,
-      };
+      const filterPartKey = `f-${key}`;
+
+      facetFilters[filterPartKey] = values.sort().join(',');
     }
     return facetFilters;
   };
@@ -134,10 +129,9 @@ export function useFilterQuery() {
 
   const add = (key: MultiFilterKey, payload: IFilterPayload) => {
     if (payload.facetNode) {
-
       const facetMap = state.value[key].facetKeys;
       if (!facetMap.get(payload.facetNode.slug)) {
-        facetMap.set(payload.facetNode.slug, new Set);
+        facetMap.set(payload.facetNode.slug, new Set());
       }
 
       facetMap.get(payload.facetNode.slug).add(payload.value);
@@ -151,6 +145,7 @@ export function useFilterQuery() {
   };
 
   const remove = (key: MultiFilterKey, payload: IFilterPayload) => {
+    console.log('state remove');
     const list = Array.isArray(payload.value) ? payload.value : [payload.value];
     list.forEach((item) => {
       state.value[key].generalValue.delete(item);
@@ -177,6 +172,10 @@ export function useFilterQuery() {
       state.value.price.max === DEFAULT_PRICE.max,
   );
 
+  const generalValue = computed(() =>
+    Array.from(state.value.filters.facetKeys.values()).flatMap(set => Array.from(set)),
+  );
+
   const isDefaultSort = computed(() => state.value.sort === 'popular');
 
   const selectedFilters = computed(() => state.value.filters.generalValue);
@@ -201,7 +200,6 @@ export function useFilterQuery() {
     state.value = makeState();
   };
 
-
   const updateQuery = debounce(() => {
     let q: Record<string, any> = {};
 
@@ -216,6 +214,8 @@ export function useFilterQuery() {
       q.sort = state.value.sort;
     }
 
+    consola.withTag('STATE state.value.filters').log(state.value.filters);
+
     router.replace({ query: q });
   }, 300);
 
@@ -223,7 +223,6 @@ export function useFilterQuery() {
     state,
     () => {
       updateQuery();
-      console.log('STATE', state.value);
     },
     { deep: true },
   );

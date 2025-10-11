@@ -184,8 +184,6 @@ const {
   totalDiscount,
 } = usePricing(cartProducts);
 
-console.log('cartProducts', cartProducts.value);
-
 const { t } = useI18n();
 
 const handleContinueShopping = () => emit('continue-shopping');

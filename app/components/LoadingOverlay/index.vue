@@ -1,13 +1,13 @@
 <template>
   <transition name="fade">
     <div v-if="visible" class="overlay progress-spinner">
-      <ProgressSpinner
-        style="width: 50px; height: 50px"
-        stroke-width="8"
-        fill="transparent"
-        animation-duration=".5s"
-        aria-label="Custom ProgressSpinner"
-      />
+<!--      <ProgressSpinner-->
+<!--        style="width: 50px; height: 50px"-->
+<!--        stroke-width="8"-->
+<!--        fill="transparent"-->
+<!--        animation-duration=".5s"-->
+<!--        aria-label="Custom ProgressSpinner"-->
+<!--      />-->
     </div>
   </transition>
 </template>

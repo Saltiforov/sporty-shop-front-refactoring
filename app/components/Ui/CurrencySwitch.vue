@@ -27,7 +27,6 @@ const currencyOptions = [
   { label: 'Ukraine', code: 'UAH', value: Currencies.UAH },
   { label: 'Europe', code: 'EUR', value: Currencies.EUR },
 ];
-console.log('currency', currency.value);
 
 const selectedCurrency = ref(currencyOptions.find(currncyOption => currency.value === currncyOption.value));
 

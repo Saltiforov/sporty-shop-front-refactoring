@@ -28,7 +28,6 @@ const { activeModal } = storeToRefs(appShell);
 const { openModal } = appShell;
 
 const currentModal = computed(() => {
-  console.log('activeModal', activeModal.value);
   if (!activeModal.value) return null;
   return modalRegistry[activeModal.value] ?? null;
 });

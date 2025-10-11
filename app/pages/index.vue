@@ -1,6 +1,6 @@
 <template>
   <div>
-    <LoadingOverlay :visible="isLoading" />
+<!--    <LoadingOverlay :visible="isLoading" />-->
 
     <div class="max-w-[1756px] mx-auto">
       <div class="main-content-container">
@@ -83,7 +83,7 @@
           </aside>
 
           <div>
-            <div class="product-grid">
+            <div v-if="productList.length" class="product-grid">
               <ProductCard
                 v-for="product in productList"
                 :key="product.id"
@@ -97,11 +97,11 @@
           <div v-if="false">
             <div class="products-pagination-actions mb-[72px]">
               <div class="product-pagination-wrapper flex justify-center">
-                <BasePagination
-                  v-if="!isLoading"
-                  v-model="page"
-                  :total-items="totalItems"
-                />
+<!--                <BasePagination-->
+<!--                  v-if="!isLoading"-->
+<!--                  v-model="page"-->
+<!--                  :total-items="10"-->
+<!--                />-->
               </div>
             </div>
           </div>
@@ -120,14 +120,20 @@ import { ModalNames } from '#shared/types/modals';
 import { Autoplay, Navigation, Pagination } from 'swiper/modules';
 import { Swiper, SwiperSlide } from 'swiper/vue';
 import { useFilterQuery } from '~/composables/useFilterQuery.js';
+import { consola } from 'consola';
+
+consola.success('import.meta.server', import.meta.server);
+
 
 const modules = [Navigation, Pagination, Autoplay];
 
 const route = useRoute();
+
+consola.withTag('import.meta.serve').log(import.meta.server);
 const { t, locale } = useI18n();
 
-const page = ref(Number(route.query.page) || 1);
-const limit = ref(Number(route.query.limit) || 10);
+const page = ref(Number(route.query?.page) || 1);
+const limit = ref(Number(route.query?.limit) || 10);
 const skip = computed(() => (page.value - 1) * limit.value);
 const q = computed(() => route.query.q ?? '');
 
@@ -139,43 +145,49 @@ const { openModal } = useAppShellState();
 const isMobileFiltersOpen = ref(false);
 const promotionalProducts = ref([]);
 
-console.log('route.query', route.query);
+const productsQueryParams = computed(() => {
+  return {
+    page: page.value,
+    limit: limit.value,
+    skip: skip.value,
+    filters: filtersUrlDemarcation(),
+    price: route.query.price,
+    sort: route.query.sort,
+    ...(q.value ? { q: q.value } : {}),
+  };
+});
 
-// const productsQueryParams = computed(() => {
-//   return {
-//     page: page.value,
-//     limit: limit.value,
-//     skip: skip.value,
-//     filters: filtersUrlDemarcation(),
-//     price: route.query.price,
-//     sort: route.query.sort,
-//     ...(q.value ? { q: q.value } : {}),
-//   };
-// });
-//
-// const params = computed(() => {
-//   return {
-//     ...productsQueryParams.value,
-//     locale: locale.value,
-//   };
-// });
+const params = computed(() => {
+  return {
+    ...productsQueryParams.value,
+    locale: locale.value,
+  };
+});
 
 const handleMobileFilters = () => {
   openModal(ModalNames.AUTH);
 };
 
-// const { data: products, pending } = await useFetchApi(
-//   'GeneralProductsList',
-//   getProducts,
-//   params,
-// );
+const { data: products, pending, error } = await useFetchApi(
+  'GeneralProductsList',
+  getProducts,
+  params,
+);
+
+watch(error, (e) => {
+  if (!e) return;
+  // 1) лог
+  consola.withTag('useFetchApi').error(e);
+  consola.withTag('useFetchApi').log(e);
+  // 2) UI-реакция
+  // showToast('Не удалось загрузить товары')
+});
 
 const promotionalProductsSwiperOptions = {
   slidesPerView: 1,
   loop: true,
 };
 
-const products = ref([]);
 const productList = computed(() => products.value?.list ?? []);
 const isLoading = computed(() => false);
 
@@ -185,11 +197,9 @@ onMounted(async () => {
   hydrated.value = true;
 
   const { $basicApi } = useNuxtApp();
-  // const res = await getProductsOnSale($basicApi);
-  // promotionalProducts.value = res.list;
+  const res = await getProductsOnSale($basicApi);
+  promotionalProducts.value = res.list;
 });
-
-// console.log('products', products.value);
 </script>
 
 <style scoped>

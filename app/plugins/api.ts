@@ -9,7 +9,6 @@ export default defineNuxtPlugin(() => {
   const api = $fetch.create({
     baseURL: config.public.apiBase,
     onRequest({ options }: any) {
-      console.log('onRequest', options, token);
       if (token.value) {
         options.headers = {
           ...options.headers,

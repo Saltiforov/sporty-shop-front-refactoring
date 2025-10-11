@@ -6,7 +6,6 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: {
     enabled: true,
-    debug: true,
   },
   devServer: {
     port: 3080,
@@ -16,10 +15,18 @@ export default defineNuxtConfig({
       apiBase: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:3000/api',
     },
   },
+  nitro: { debug: true, sourceMap: true },
+  vite: { build: { sourcemap: true } },
   typescript: {
     strict: false,
   },
+  hooks: {
+    'build:before': () => {
+      console.clear(); // очищает при старте, чтобы видеть только свои логи
+    },
+  },
   vite: {
+    logLevel: 'silent',
     plugins: [
       createSvgIconsPlugin({
         iconDirs: [path.resolve(process.cwd(), 'app/assets/icons')],

@@ -17,7 +17,6 @@ export const useAppShellState = defineStore('appShellState', () => {
 
   const closeModal = () => {
     activeModal.value = null;
-    console.log('closeModal');
   };
 
 
