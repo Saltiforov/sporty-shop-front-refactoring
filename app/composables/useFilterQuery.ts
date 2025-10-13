@@ -36,14 +36,18 @@ export function useFilterQuery() {
 
   const stringifyFilters = () => {
     const facetMap = state.value.filters;
-    const facetFilters = {};
+    const facetFilters: Record<string, string> = {};
 
-    for (const [key, setValue] of facetMap.entries()) {
-      if (!setValue || setValue.size === 0) continue;
+    const sortedKeys = Array.from(facetMap.keys()).sort();
 
-      const filterPartKey = `f-${key}`;
+    for (const key of sortedKeys) {
+      const set = facetMap.get(key);
+      if (!set || set.size === 0) continue;
 
-      facetFilters[filterPartKey] = values.sort().join(',');
+      const values = Array.from(set);
+      const sortedValues = values.length > 1 ? values.sort() : values;
+
+      facetFilters[`f-${key}`] = sortedValues.join(',');
     }
 
     return facetFilters;
