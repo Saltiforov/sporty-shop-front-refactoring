@@ -87,7 +87,6 @@
       >
         <div
           v-show="slotProps.node.children && expandedKeys[slotProps.node.key]"
-          ref="childList"
           :class="['mt-2 overflow-hidden', !mobileVersion ? 'pl-4' : '']"
         >
           <div
@@ -212,8 +211,9 @@ const leave = (el) => {
 const afterLeave = (el) => {
   el.style.height = 'auto';
 };
+const { t, locale } = useI18n();
 
-const { add, remove, replace, selectedFilters } = useFilterQuery();
+const { add, remove, selectedFilters } = useFilterQuery();
 
 const selectAllLabel = (node) => {
   return isAllItemsSelected(node) ? 'Deselect all' : 'Select all';
@@ -229,8 +229,6 @@ const shouldShowDivider = (node) => {
   return mobileVersion.value ? isRoot && isExpanded : isRoot;
 };
 
-const { t, locale } = useI18n();
-const route = useRoute();
 
 const nodes = ref([]);
 const expandedKeys = ref({ 0: true });
@@ -289,10 +287,6 @@ const expandParentNodes = (nodeKey) => {
   });
 };
 
-const nodeFacetKey = (node) => {
-  return node.children.length ? node.slug : null;
-};
-
 const updateFilterSelection = (node, isChecked) => {
   const facetNode = findParentBySlug(nodes.value, node.slug);
   const payload = {
@@ -308,12 +302,16 @@ const updateFilterSelection = (node, isChecked) => {
 };
 
 const selectAllInCategory = (node) => {
+  const childrenSlugs = node.children.map(child => child.slug);
+  const payload = {
+    facetNode: node,
+    value: childrenSlugs,
+  };
+
   if (node.children.length && !isAllItemsSelected(node)) {
-    const childrenSlugs = node.children.map(child => child.slug);
-    add('filters', childrenSlugs);
+    add('filters', payload);
   } else {
-    const childrenSlugs = node.children.map(child => child.slug);
-    remove('filters', childrenSlugs);
+    remove('filters', payload);
   }
 };
 
@@ -347,20 +345,7 @@ onMounted(async () => {
   const response = await getAllFilters($basicApi);
   console.log('response', response.list);
   nodes.value = mapNodes(response.list);
-  // syncTreeWithQuery();
 });
-
-watch(
-  () => route.query.filters,
-  (newFilters) => {
-    if (newFilters) {
-      // syncTreeWithQuery();
-    }
-  },
-);
-
-const childList = ref(null);
-
 
 </script>
 

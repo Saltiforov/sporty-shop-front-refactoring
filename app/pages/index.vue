@@ -121,6 +121,7 @@ import { Autoplay, Navigation, Pagination } from 'swiper/modules';
 import { Swiper, SwiperSlide } from 'swiper/vue';
 import { useFilterQuery } from '~/composables/useFilterQuery.js';
 import { consola } from 'consola';
+import { filtersUrlDemarcation } from '~/utils/filters';
 
 consola.success('import.meta.server', import.meta.server);
 
@@ -136,9 +137,6 @@ const page = ref(Number(route.query?.page) || 1);
 const limit = ref(Number(route.query?.limit) || 10);
 const skip = computed(() => (page.value - 1) * limit.value);
 const q = computed(() => route.query.q ?? '');
-
-const { filtersUrlDemarcation } = useFilterQuery();
-
 const { addProductToViewed } = useViewedProducts();
 const { openModal } = useAppShellState();
 
@@ -150,7 +148,7 @@ const productsQueryParams = computed(() => {
     page: page.value,
     limit: limit.value,
     skip: skip.value,
-    filters: filtersUrlDemarcation(),
+    filters: filtersUrlDemarcation(route.query),
     price: route.query.price,
     sort: route.query.sort,
     ...(q.value ? { q: q.value } : {}),
