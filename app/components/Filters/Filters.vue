@@ -164,9 +164,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref } from 'vue';
 import { useWindowWidthWatcher } from '~/composables/useWindowWidthWatcher.ts';
-import { getAllFilters } from '~/services/api/filters/index.js';
 import { useFilterQuery } from '~/composables/useFilterQuery.js';
 import defaultFilterImage from '~/assets/icons/injections-icon.svg';
 
@@ -177,7 +176,6 @@ const props = defineProps({
   },
 });
 
-console.log('props FFFILLLTERS', props.filters);
 
 const getWidth = useWindowWidthWatcher();
 

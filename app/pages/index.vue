@@ -133,6 +133,9 @@ const limit = ref(Number(route.query?.limit) || 10);
 const skip = computed(() => (page.value - 1) * limit.value);
 const q = computed(() => route.query.q ?? '');
 
+const { canonicalUrl } = await useCanonical(route);
+
+
 const productsQueryParams = computed(() => {
   return {
     page: page.value,
@@ -165,7 +168,7 @@ const {
   error: filtersError,
 } = await useFetchApi('GeneralFiltersList', getAllFilters, null);
 
-const { canonicalUrl } = await useCanonical(route.query);
+console.log('CANONONONOO', canonicalUrl.value);
 
 useHead({
   link: [{ rel: 'canonical', href: canonicalUrl.value }],
