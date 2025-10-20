@@ -1,0 +1,7 @@
+<svg
+        class="w-4 h-4 transform transition-transform"
+        viewBox="0 0 24 24"
+        fill="none"
+>
+    <path d="M8 5L15 12L8 19" stroke="currentColor" stroke-width="2" />
+</svg>

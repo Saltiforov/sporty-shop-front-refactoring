@@ -5,7 +5,4 @@ const debounce = (fn: any, delay = 300) => {
     timer = setTimeout(() => fn(...args), delay);
   };
 };
-
-export {
-  debounce,
-};
+export { debounce };

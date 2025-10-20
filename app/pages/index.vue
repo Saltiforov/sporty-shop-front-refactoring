@@ -1,6 +1,6 @@
 <template>
   <div>
-<!--    <LoadingOverlay :visible="isLoading" />-->
+    <!--    <LoadingOverlay :visible="isLoading" />-->
 
     <div class="max-w-[1756px] mx-auto">
       <div class="main-content-container">
@@ -42,7 +42,8 @@
             <div
               class="filters mb-[91px] w-full max-w-[354px] min-h-[575px] border rounded-[var(--default-rounded)]"
             >
-              <Filters />
+              <Filters v-if="!filtersPending" :filters="filters" />
+              <SkeletonsFilters v-else />
             </div>
 
             <div class="promotional-products text-center">
@@ -97,11 +98,11 @@
           <div v-if="false">
             <div class="products-pagination-actions mb-[72px]">
               <div class="product-pagination-wrapper flex justify-center">
-<!--                <BasePagination-->
-<!--                  v-if="!isLoading"-->
-<!--                  v-model="page"-->
-<!--                  :total-items="10"-->
-<!--                />-->
+                <!--                <BasePagination-->
+                <!--                  v-if="!isLoading"-->
+                <!--                  v-model="page"-->
+                <!--                  :total-items="10"-->
+                <!--                />-->
               </div>
             </div>
           </div>
@@ -111,7 +112,7 @@
   </div>
 </template>
 
-<script setup lang="ts">
+<script async setup lang="ts">
 import { computed } from 'vue';
 import { getProducts, getProductsOnSale } from '~/services/api/products';
 import { useFetchApi } from '~/composables/useApi';
@@ -119,29 +120,18 @@ import { useAppShellState } from '~~/stores/useAppShellState.client';
 import { ModalNames } from '#shared/types/modals';
 import { Autoplay, Navigation, Pagination } from 'swiper/modules';
 import { Swiper, SwiperSlide } from 'swiper/vue';
-import { useFilterQuery } from '~/composables/useFilterQuery.js';
-import { consola } from 'consola';
 import { filtersUrlDemarcation } from '~/utils/filters';
-
-consola.success('import.meta.server', import.meta.server);
-
-
-const modules = [Navigation, Pagination, Autoplay];
+import { getAllFilters } from '~/services/api/filters';
+import { useCanonical } from '#shared/comsopables/useCanonical';
 
 const route = useRoute();
 
-consola.withTag('import.meta.serve').log(import.meta.server);
 const { t, locale } = useI18n();
 
 const page = ref(Number(route.query?.page) || 1);
 const limit = ref(Number(route.query?.limit) || 10);
 const skip = computed(() => (page.value - 1) * limit.value);
 const q = computed(() => route.query.q ?? '');
-const { addProductToViewed } = useViewedProducts();
-const { openModal } = useAppShellState();
-
-const isMobileFiltersOpen = ref(false);
-const promotionalProducts = ref([]);
 
 const productsQueryParams = computed(() => {
   return {
@@ -162,24 +152,32 @@ const params = computed(() => {
   };
 });
 
-const handleMobileFilters = () => {
-  openModal(ModalNames.AUTH);
-};
+const {
+  data: products,
+  pending: productsPending,
+  error: productsError,
+} = await useFetchApi('GeneralProductsList', getProducts, params);
 
-const { data: products, pending, error } = await useFetchApi(
-  'GeneralProductsList',
-  getProducts,
-  params,
-);
 
-watch(error, (e) => {
-  if (!e) return;
-  // 1) лог
-  consola.withTag('useFetchApi').error(e);
-  consola.withTag('useFetchApi').log(e);
-  // 2) UI-реакция
-  // showToast('Не удалось загрузить товары')
+const {
+  data: filters,
+  pending: filtersPending,
+  error: filtersError,
+} = await useFetchApi('GeneralFiltersList', getAllFilters, null);
+
+const { canonicalUrl } = await useCanonical(route.query);
+
+useHead({
+  link: [{ rel: 'canonical', href: canonicalUrl.value }],
 });
+
+const modules = [Navigation, Pagination, Autoplay];
+
+const { addProductToViewed } = useViewedProducts();
+const { openModal } = useAppShellState();
+
+const isMobileFiltersOpen = ref(false);
+const hydrated = ref(false);
 
 const promotionalProductsSwiperOptions = {
   slidesPerView: 1,
@@ -187,16 +185,21 @@ const promotionalProductsSwiperOptions = {
 };
 
 const productList = computed(() => products.value?.list ?? []);
-const isLoading = computed(() => false);
 
-const hydrated = ref(false);
+const {
+  data: promotionalProducts,
+  pending: promoPending,
+  error: promoError,
+} = useFetchApi('GeneralPromotions', getProductsOnSale, null, {
+  server: false,
+});
+
+const handleMobileFilters = () => {
+  openModal(ModalNames.AUTH);
+};
 
 onMounted(async () => {
   hydrated.value = true;
-
-  const { $basicApi } = useNuxtApp();
-  const res = await getProductsOnSale($basicApi);
-  promotionalProducts.value = res.list;
 });
 </script>
 

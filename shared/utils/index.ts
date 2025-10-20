@@ -154,6 +154,44 @@ export function isEqual(a, b) {
   return checkCircular(a, b);
 }
 
+export const stable = (o: any) => {
+  if (!o || typeof o !== 'object') return ''; // защита от null, undefined, примитивов
+  return JSON.stringify(
+    Object.keys(o).sort().reduce((a, k) => {
+      (a as any)[k] = (o as any)[k];
+      return a;
+    }, {} as any),
+  );
+};
+
+export const stableKey = (base: string, params?: any) => {
+  const serialized = stable(params);
+  return serialized ? `${base}:${serialized}` : base; // без суффикса, если нет параметров
+};
+
+export function buildSlugIndex(list: any, lang = 'en'): Map<any, any> {
+  const index = new Map<string, any>();
+  const stack = [...list];
+
+  console.log('stack', stack);
+  while (stack.length) {
+    const node = stack.pop()!;
+    const s = node.slug?.[lang];
+    if (s) index.set(s, node);
+    if (node.children?.length) stack.push(...node.children);
+  }
+  return index;
+}
+
+export function normalizeQuery(q: Record<string, string | string[] | undefined>) {
+  const out: Record<string, string> = {};
+  for (const [k, v] of Object.entries(q)) {
+    if (v == null) continue;
+    out[k] = Array.isArray(v) ? v.join(',') : v;
+  }
+  return out;
+}
+
 export function matchPathPrefix(path, prefix) {
   return new RegExp(`^\/[a-z]{2}${prefix}`).test(path);
 }

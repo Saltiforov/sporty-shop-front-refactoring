@@ -1,6 +1,6 @@
 import { debounce } from '~/utils';
 import { parseFilters, parsePrice, parseSort, DEFAULT_PRICE } from '~/utils/filters';
-import { isEqual } from '#shared/utils';
+import { isEqual, normalizeQuery } from '#shared/utils';
 
 type MultiFilterKey = 'filters' | 'brand'
 type ScalarFilterKey = 'price' | 'sort'
@@ -28,6 +28,7 @@ export function useFilterQuery() {
 
   const parseFromRoute = () => {
     const query = route.query;
+    console.log('parseFromRoute', query);
 
     state.value.filters = parseFilters(query);
     state.value.price = parsePrice(query);
@@ -117,6 +118,8 @@ export function useFilterQuery() {
       ),
   );
 
+  const selectedFiltersState = computed(() => state.value.filters);
+
   const isDefaultSort = computed(() => state.value.sort === 'popular');
 
   const minPrice = computed({
@@ -133,10 +136,6 @@ export function useFilterQuery() {
     },
   });
 
-  const clear = () => {
-    state.value = makeState();
-  };
-
   const nextQuery = computed(() => {
     const q: Record<string, any> = {};
     if (state.value.filters.size) Object.assign(q, stringifyFilters());
@@ -149,6 +148,12 @@ export function useFilterQuery() {
 
     return q;
   });
+
+
+  const clear = () => {
+    state.value = makeState();
+  };
+
 
   const updateQuery = debounce(() => {
     let q: Record<string, any> = {};
@@ -168,23 +173,31 @@ export function useFilterQuery() {
     const next = q;
     const curr = route.query;
 
-
     if (isEqual(next, curr)) return;
 
     router.push({ path: route.path, query: q });
   }, 300);
+
+  parseFromRoute();
 
   watch(
     nextQuery,
     () => {
       updateQuery();
     },
-    { deep: true, immediate: true },
+    {  immediate: true },
   );
+  //
+  // watch(() => route.fullPath, (newValue, oldValue) => {
+  //
+  //   if (newValue !== oldValue) {
+  //     console.log('QUERY newValue', newValue);
+  //     console.log('QUERY oldValue', oldValue);
+  //     parseFromRoute();
+  //   }
+  //
+  // }, { deep: false, immediate: true });
 
-  watch(() => route.fullPath, () => {
-    parseFromRoute();
-  }, { deep: false, immediate: true });
 
   return {
     add,
@@ -194,5 +207,7 @@ export function useFilterQuery() {
     maxPrice,
     minPrice,
     selectedFilters,
+    selectedFiltersState,
+    state,
   };
 }
