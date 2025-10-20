@@ -92,24 +92,30 @@ export async function useCanonical(route) {
   };
 
   const buildCanonicalUrl = () => {
-    const basicUrl = new URLSearchParams(route.path);
-    const targetQueriesKeys = Object.keys(target.value.query);
-    console.log('targetQueriesKeys', targetQueriesKeys);
-    if (targetQueriesKeys.length) {
-      targetQueriesKeys.forEach((key) => {
-        basicUrl.set(key, target.value.query[key]);
-      });
+    const params = new URLSearchParams();
+
+    const keys = Object.keys(target.value.query ?? {}).sort();
+
+    for (const key of keys) {
+      const raw = target.value.query[key];
+
+      if (
+        raw == null ||
+        raw === '' ||
+        (Array.isArray(raw) && raw.length === 0)
+      ) continue;
+
+      const csv = Array.isArray(raw) ? raw.join(',') : String(raw).trim();
+      params.set(key, csv);
     }
 
-    return basicUrl.toString();
+    const qs = params.toString();
+    return qs ? `${route.path}?${qs}` : route.path;
   };
 
   canonicalUrl.value = buildCanonicalUrl();
 
-  console.log('canonicalUrl.value', canonicalUrl.value);
-  console.log('route.fullPath', route.fullPath);
-
-  isCanonical.value = isEqual(canonicalUrl.value, route.fullPath);
+  isCanonical.value = isEqual(decodeURIComponent(canonicalUrl.value), route.fullPath);
 
   return {
     canonicalUrl,
